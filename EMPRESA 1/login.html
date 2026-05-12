@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema de Eventos</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 420px;
+            overflow: hidden;
+            animation: fadeInUp 0.5s ease;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .login-header h1 { font-size: 26px; margin-bottom: 8px; }
+        .login-body { padding: 32px; }
+        .form-group { margin-bottom: 24px; }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-login:hover { transform: translateY(-2px); }
+        .btn-login:disabled { opacity: 0.7; cursor: not-allowed; }
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: none;
+            font-size: 14px;
+        }
+        .login-footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            font-size: 12px;
+            color: #666;
+        }
+        .pasta-info {
+            background: #e8f4fd;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            text-align: center;
+            color: #0056b3;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="login-container">
+        <div class="login-header">
+            <h1>🎪 Sistema de Eventos</h1>
+            <p>Acesso ao sistema</p>
+        </div>
+        <div class="login-body">
+            <div id="pastaDisplay" class="pasta-info"></div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Login</label>
+                    <input type="text" id="username" class="form-control" placeholder="Digite seu login" required>
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="password" class="form-control" placeholder="Digite sua senha" required>
+                </div>
+                <button type="submit" class="btn-login" id="btnLogin">ENTRAR</button>
+                <div id="errorMsg" class="error-message"></div>
+            </form>
+        </div>
+        <div class="login-footer">
+            <p>© 2026 Sistema de Eventos - Todos os direitos reservados</p>
+        </div>
+    </div>
+
+    <script>
+        // ==================== FUNÇÃO PARA PEGAR A PASTA ====================
+        function getPastaAtual() {
+            const pastaSalva = sessionStorage.getItem('pasta_atual');
+            if (pastaSalva) return pastaSalva;
+
+            const rawPath = window.location.pathname;
+            const path = decodeURIComponent(rawPath || '');
+            const pathLower = path.toLowerCase();
+            const pastasPossiveis = ['EMPRESA 1', 'EMPRESA 2', 'EMPRESA 3', 'EMPRESA 4', 'EMPRESA 5'];
+
+            for (const pasta of pastasPossiveis) {
+                if (path.includes(pasta) || pathLower.includes(pasta.toLowerCase())) {
+                    sessionStorage.setItem('pasta_atual', pasta);
+                    return pasta;
+                }
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const pastaParam = urlParams.get('pasta');
+            if (pastaParam) {
+                const pastaParamNorm = pastaParam.trim();
+                if (pastasPossiveis.includes(pastaParamNorm)) {
+                    sessionStorage.setItem('pasta_atual', pastaParamNorm);
+                    return pastaParamNorm;
+                }
+            }
+
+            const parts = path.split('/');
+            for (const part of parts) {
+                const partDec = part.trim();
+                if (partDec.toUpperCase().startsWith('EMPRESA')) {
+                    sessionStorage.setItem('pasta_atual', partDec);
+                    return partDec;
+                }
+            }
+
+            return '';
+        }
+
+        const PASTA_ATUAL = getPastaAtual();
+        console.log('Pasta atual detectada:', PASTA_ATUAL);
+        
+        const pastaDisplay = document.getElementById('pastaDisplay');
+        if (PASTA_ATUAL) {
+            pastaDisplay.innerHTML = `📁 Acessando: <strong>${PASTA_ATUAL}</strong>`;
+        } else {
+            pastaDisplay.innerHTML = `⚠️ Nenhuma pasta detectada`;
+            pastaDisplay.style.background = '#f8d7da';
+            pastaDisplay.style.color = '#721c24';
+        }
+
+        // ==================== CARREGAR EMPRESAS DA PASTA ====================
+        function carregarEmpresasDaPasta() {
+            if (!PASTA_ATUAL) {
+                console.error('Nenhuma pasta detectada!');
+                return [];
+            }
+            const key = `empresas_login_${PASTA_ATUAL}`;
+            let empresas = JSON.parse(localStorage.getItem(key) || '[]');
+            console.log(`Empresas na pasta ${PASTA_ATUAL}:`, empresas.length);
+
+            if (!empresas.length) {
+                empresas = carregarEmpresasDaMatrizPorPasta(PASTA_ATUAL);
+                if (empresas.length) {
+                    localStorage.setItem(key, JSON.stringify(empresas));
+                    console.log(`Fallback: gravado ${empresas.length} empresa(s) em ${key} a partir de dados da matriz`);
+                }
+            }
+
+            return empresas;
+        }
+
+        function carregarUsuariosAutorizados() {
+            return JSON.parse(localStorage.getItem('matriz_usuarios_app_autorizados') || localStorage.getItem('matriz_usuarios_autorizados') || '[]');
+        }
+
+        function salvarUsuariosAutorizados(usuarios) {
+            const existeApp = localStorage.getItem('matriz_usuarios_app_autorizados') !== null;
+            const existeGlobal = localStorage.getItem('matriz_usuarios_autorizados') !== null;
+
+            if (existeApp) {
+                localStorage.setItem('matriz_usuarios_app_autorizados', JSON.stringify(usuarios));
+            }
+            if (existeGlobal) {
+                localStorage.setItem('matriz_usuarios_autorizados', JSON.stringify(usuarios));
+            }
+            if (!existeApp && !existeGlobal) {
+                localStorage.setItem('matriz_usuarios_app_autorizados', JSON.stringify(usuarios));
+            }
+        }
+
+        function getCredencialMatriz(login, idEmpresa) {
+            const loginLower = (login || '').toLowerCase();
+            const credenciais = JSON.parse(localStorage.getItem('matriz_empresas_credenciais') || '[]');
+            return credenciais.find(c => c.id_empresa === idEmpresa || (c.login && c.login.toLowerCase() === loginLower));
+        }
+
+        function isSenhaCorreta(empresa, senha) {
+            const senhaDigitada = (senha || '').trim();
+            console.log('Verificando senha para empresa:', empresa.login);
+
+            // 1. Verificar senha diretamente na empresa (se foi carregada da pasta)
+            if (empresa.senha && String(empresa.senha).trim() === senhaDigitada) {
+                console.log('✅ Senha correta na empresa');
+                return true;
+            }
+
+            // 2. Verificar na matriz de credenciais
+            const cred = getCredencialMatriz(empresa.login, empresa.id);
+            if (cred && cred.senha && String(cred.senha).trim() === senhaDigitada) {
+                console.log('✅ Senha correta na matriz de credenciais');
+                return true;
+            }
+
+            // 3. Verificar nos usuários autorizados
+            const usuariosApp = carregarUsuariosAutorizados();
+            const usuario = usuariosApp.find(u => u.id === empresa.id || (u.login && u.login.toLowerCase() === (empresa.login || '').toLowerCase()));
+            if (usuario && usuario.senha && String(usuario.senha).trim() === senhaDigitada) {
+                console.log('✅ Senha correta nos usuários autorizados');
+                return true;
+            }
+
+            console.log('❌ Senha incorreta');
+            return false;
+        }
+
+        function carregarEmpresasDaMatrizPorPasta(pasta) {
+            const empresasMatriz = JSON.parse(localStorage.getItem('matriz_empresas') || '[]');
+            const credenciais = JSON.parse(localStorage.getItem('matriz_empresas_credenciais') || '[]');
+            const usuariosApp = carregarUsuariosAutorizados();
+            const pastaEsperada = (pasta || '').trim().toLowerCase();
+
+            const empresasCredenciais = credenciais
+                .map(c => {
+                    const empresa = empresasMatriz.find(e => e.id === c.id_empresa);
+                    if (!empresa || !empresa.pastaSistema) return null;
+                    if (empresa.pastaSistema.trim().toLowerCase() !== pastaEsperada) return null;
+                    return {
+                        id: c.id_empresa,
+                        nome: empresa.nome || 'Empresa',
+                        login: c.login,
+                        senha: c.senha,
+                        senha_provisoria: c.senha_provisoria || false,
+                        pasta: empresa.pastaSistema
+                    };
+                })
+                .filter(Boolean);
+
+            const empresasUsuariosApp = usuariosApp
+                .filter(u => u.pasta && u.pasta.trim().toLowerCase() === pastaEsperada)
+                .map(u => ({
+                    id: u.id,
+                    nome: u.nome || 'Empresa',
+                    login: u.login,
+                    senha: u.senha || '',
+                    senha_provisoria: u.senha_provisoria || true,
+                    pasta: u.pasta
+                }));
+
+            const empresasMap = new Map();
+            empresasCredenciais.forEach(emp => {
+                const chave = emp.id || emp.login;
+                empresasMap.set(chave, emp);
+            });
+            empresasUsuariosApp.forEach(emp => {
+                const chave = emp.id || emp.login;
+                if (!empresasMap.has(chave)) empresasMap.set(chave, emp);
+            });
+
+            return Array.from(empresasMap.values());
+        }
+        
+        // ==================== VERIFICAR ACESSO ====================
+        function verificarCredenciais(login, senha) {
+            let empresas = carregarEmpresasDaPasta();
+            console.log('Buscando login:', login);
+            console.log('Empresas disponíveis na pasta:', empresas.map(e => ({ login: e.login, nome: e.nome, senha_provisoria: e.senha_provisoria })));
+            
+            const loginLower = login.toLowerCase();
+            let empresa = empresas.find(e => e.login && e.login.toLowerCase() === loginLower);
+
+            if (!empresa) {
+                console.log('Empresa não encontrada na pasta, tentando fallback direto da matriz...');
+                empresas = carregarEmpresasDaMatrizPorPasta(PASTA_ATUAL);
+                console.log('Empresas carregadas do fallback da matriz:', empresas.map(e => ({ login: e.login, nome: e.nome, senha_provisoria: e.senha_provisoria })));
+                empresa = empresas.find(e => e.login && e.login.toLowerCase() === loginLower);
+                if (empresa && empresas.length) {
+                    const key = `empresas_login_${PASTA_ATUAL}`;
+                    localStorage.setItem(key, JSON.stringify(empresas));
+                    console.log(`Cache local atualizado em ${key} com ${empresas.length} empresa(s)`);
+                }
+            }
+
+            if (!empresa) {
+                console.log('Empresa não encontrada após fallback:', login);
+                return { success: false, message: 'Usuário não encontrado' };
+            }
+            
+            console.log('Empresa encontrada:', empresa);
+            
+            if (!isSenhaCorreta(empresa, senha)) {
+                console.log('Senha incorreta para empresa:', empresa.login);
+                return { success: false, message: 'Senha incorreta' };
+            }
+            
+            const usuariosApp = carregarUsuariosAutorizados();
+            const usuario = usuariosApp.find(u => u.id === empresa.id || (u.login && u.login.toLowerCase() === loginLower));
+            if (usuario && usuario.status_acesso === 'bloqueado') {
+                return { success: false, message: '❌ Acesso bloqueado. Contate o administrador.' };
+            }
+            
+            const cred = getCredencialMatriz(empresa.login, empresa.id);
+            const senhaProvisoria = empresa.senha_provisoria !== undefined
+                ? !!empresa.senha_provisoria
+                : !!(cred ? cred.senha_provisoria : false);
+            
+            console.log('Login bem-sucedido para:', empresa.nome, 'senha provisória:', senhaProvisoria);
+            
+            return {
+                success: true,
+                empresa: {
+                    id: empresa.id,
+                    nome: empresa.nome,
+                    login: empresa.login,
+                    senha_provisoria: senhaProvisoria,
+                    pasta: PASTA_ATUAL
+                }
+            };
+        }
+
+        // ==================== EVENTO DE LOGIN ====================
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const btn = document.getElementById('btnLogin');
+            const errorMsg = document.getElementById('errorMsg');
+            const loading = document.getElementById('loadingOverlay');
+            
+            if (!username || !password) {
+                errorMsg.textContent = 'Preencha todos os campos';
+                errorMsg.style.display = 'block';
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.textContent = 'VERIFICANDO...';
+            loading.style.display = 'flex';
+            errorMsg.style.display = 'none';
+            
+            setTimeout(() => {
+                const result = verificarCredenciais(username, password);
+                console.log('Resultado da verificação de credenciais:', result);
+                loading.style.display = 'none';
+                
+                if (result.success) {
+                    console.log('Login bem-sucedido, empresa:', result.empresa);
+                    console.log('Senha provisória:', result.empresa.senha_provisoria);
+                    
+                    // Salvar empresa logada no sessionStorage
+                    sessionStorage.setItem('empresa_logada', JSON.stringify(result.empresa));
+                    sessionStorage.setItem('pasta_atual', PASTA_ATUAL);
+                    
+                    // Atualizar último acesso
+                    const usuariosApp = carregarUsuariosAutorizados();
+                    const userIndex = usuariosApp.findIndex(u => u.id === result.empresa.id);
+                    if (userIndex !== -1) {
+                        usuariosApp[userIndex].ultimo_acesso = new Date().toISOString();
+                        salvarUsuariosAutorizados(usuariosApp);
+                    }
+                    
+                    // CORREÇÃO: Redireciona corretamente para a pasta Sistema matriz
+                    if (result.empresa.senha_provisoria) {
+                        console.log('Redirecionando para mudança de senha...');
+                        btn.textContent = 'REDIRECIONANDO...';
+                        const redirectUrl = '../Sistema matriz/mudar-senha-empresa.html?login=' + encodeURIComponent(result.empresa.login) + '&pasta=' + encodeURIComponent(PASTA_ATUAL) + '&token=primeiro_acesso';
+                        console.log('URL de redirecionamento:', redirectUrl);
+                        window.location.href = redirectUrl;
+                    } else {
+                        console.log('Redirecionando para index.html...');
+                        btn.textContent = 'ENTRANDO...';
+                        window.location.href = 'index.html';
+                    }
+                } else {
+                    console.log('Erro no login:', result.message);
+                    errorMsg.textContent = result.message;
+                    errorMsg.style.display = 'block';
+                    btn.disabled = false;
+                    btn.textContent = 'ENTRAR';
+                }
+            }, 800);
+        });
+        
+        function prefillUsernameFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const loginParam = urlParams.get('login');
+            if (loginParam) {
+                document.getElementById('username').value = loginParam;
+            }
+        }
+
+        document.getElementById('username').focus();
+        prefillUsernameFromUrl();
+    </script>
+</body>
+</html>

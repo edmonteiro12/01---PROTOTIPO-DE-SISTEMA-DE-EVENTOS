@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matriz - Gestão de Empresas e Usuários</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #dee2e6;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s;
+            border-radius: 8px 8px 0 0;
+        }
+        .tab.active {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+            color: #333;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        tr:hover {
+            background: #f8f9fa;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-autorizado { background: #d4edda; color: #155724; }
+        .status-pendente { background: #fff3cd; color: #856404; }
+        .status-bloqueado { background: #f8d7da; color: #721c24; }
+        .btn-acao {
+            background: none;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+            margin: 0 0.25rem;
+            display: inline-block;
+        }
+        .btn-icon {
+            background: transparent;
+            padding: 0.25rem 0.5rem;
+            font-size: 1rem;
+            margin: 0 2px;
+            box-shadow: none;
+        }
+        .btn-icon:hover {
+            transform: scale(1.1);
+            box-shadow: none;
+        }
+        .search-box {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .search-box input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            min-width: 200px;
+        }
+        .pasta-info {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            border-radius: 8px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-card h4 {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+        }
+        .stat-card .number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #495057;
+        }
+        @media (max-width: 768px) {
+            table, thead, tbody, th, td, tr { display: block; }
+            th { display: none; }
+            td {
+                padding: 0.5rem;
+                position: relative;
+                padding-left: 40%;
+                border-bottom: none;
+            }
+            td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 0.5rem;
+                font-weight: 600;
+                width: 35%;
+            }
+            tr {
+                border-bottom: 1px solid #dee2e6;
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+    <script>
+        const adminLogado = JSON.parse(sessionStorage.getItem('admin_logado') || 'null');
+        if (!adminLogado || adminLogado.tipo !== 'administrador') {
+            window.location.href = 'login-admin.html';
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 Sistema Matriz</h1>
+            <p>Cadastre e gerencie empresas - Elas aparecerão automaticamente na aba "Usuários Autorizados"</p>
+            <div style="text-align: right; margin-top: 1rem;">
+                <span style="margin-right: 1rem; color: white;">Administrador</span>
+                <button onclick="logoutAdmin()" style="background: #dc3545; padding: 0.5rem 1rem;">Sair</button>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" data-tab="empresas">🏢 Empresas Cadastradas</button>
+            <button class="tab" data-tab="usuarios">👥 Usuários Autorizados (APP)</button>
+            <button class="tab" data-tab="registros">📋 Registros de Alterações</button>
+        </div>
+        
+        <!-- Tab: Empresas -->
+        <div id="tab-empresas" class="tab-content active">
+            <div class="card">
+                <h3>🏢 Cadastrar Nova Empresa</h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                    <div class="form-group">
+                        <label>Nome da Empresa *</label>
+                        <input type="text" id="novaEmpresaNome" placeholder="Nome da empresa">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>CNPJ *</label>
+                        <input type="text" id="novaEmpresaCnpj" placeholder="00.000.000/0000-00" maxlength="18" oninput="formatarCNPJ(this)">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>CPF do Titular *</label>
+                        <input type="text" id="novaEmpresaCpfTitular" placeholder="000.000.000-00" maxlength="14" oninput="formatarCPF(this)">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Pasta do Sistema *</label>
+                        <select id="novaEmpresaPasta" onchange="mostrarInfoPasta()">
+                            <option value="">Selecione uma pasta...</option>
+                            <option value="EMPRESA 1">📁 EMPRESA 1</option>
+                            <option value="EMPRESA 2">📁 EMPRESA 2</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Login da Empresa *</label>
+                        <input type="text" id="novaEmpresaLogin" placeholder="login_empresa">
+                        <small style="color: #666;">Usado para acessar o sistema</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Senha Provisória *</label>
+                        <input type="password" id="novaEmpresaSenha" placeholder="senha temporária">
+                        <small style="color: #ff9800;">Empresa deverá alterar no 1º acesso</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Cor (opcional)</label>
+                        <input type="color" id="novaEmpresaCor" value="#667eea">
+                    </div>
+                </div>
+                
+                <div id="pastaInfo" class="pasta-info" style="display: none;">
+                    ⚠️ Os dados desta empresa serão salvos na pasta selecionada, isolados de outras empresas.
+                </div>
+                
+                <div style="margin-top: 1rem; display: flex; gap: 1rem;">
+                    <button onclick="salvarEmpresa()">✅ Cadastrar Empresa</button>
+                    <button onclick="limparFormulario()" style="background: #6c757d;">🧹 Limpar</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>🏢 Empresas Cadastradas</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>Total Empresas</h4>
+                        <div class="number" id="totalEmpresas">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>⚠️ Senha Provisória</h4>
+                        <div class="number" id="totalProvisorias">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>✅ Senha Definida</h4>
+                        <div class="number" id="totalDefinidas">0</div>
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%;">
+                        <thead>
+                            <tr><th>ID</th><th>Nome</th><th>CNPJ</th><th>Pasta</th><th>Login</th><th>Status Senha</th><th>Ações</th></tr>
+                        </thead>
+                        <tbody id="listaEmpresas"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab: Usuários Autorizados (Sincronizado com Empresas) -->
+        <div id="tab-usuarios" class="tab-content">
+            <div class="card">
+                <h3>👥 Usuários Autorizados - Acesso ao Sistema de Eventos</h3>
+                <p style="margin-bottom: 1rem; color: #666;">Empresas que estão autorizadas a acessar o sistema. O status define se podem ou não entrar.</p>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>✅ Autorizados</h4>
+                        <div class="number" id="totalAutorizados">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>⚠️ Pendentes (1º Acesso)</h4>
+                        <div class="number" id="totalPendentesApp">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>🔒 Bloqueados</h4>
+                        <div class="number" id="totalBloqueados">0</div>
+                    </div>
+                </div>
+                
+                <div class="search-box">
+                    <input type="text" id="searchUsuarioApp" placeholder="Buscar por nome, login ou CNPJ..." oninput="filtrarUsuariosApp()">
+                    <button onclick="sincronizarUsuariosComEmpresas()" class="btn-success">🔄 Sincronizar</button>
+                </div>
+                
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Empresa</th>
+                                <th>CNPJ</th>
+                                <th>Login</th>
+                                <th>Pasta</th>
+                                <th>Status Senha</th>
+                                <th>Status Acesso</th>
+                                <th>Último Acesso</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaUsuariosApp">
+                            <tr><td colspan="8" style="text-align: center;">Carregando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Registros -->
+        <div id="tab-registros" class="tab-content">
+            <div class="card">
+                <h3>📋 Registro de Alterações</h3>
+                <div class="search-box">
+                    <input type="text" id="searchRegistro" placeholder="Buscar por empresa..." oninput="filtrarRegistros()">
+                    <button onclick="limparRegistros()" class="btn-warning">🗑️ Limpar Registros</button>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%;">
+                        <thead>
+                            <tr><th>Data</th><th>Empresa</th><th>Login</th><th>Ação</th><th>Status</th></tr>
+                        </thead>
+                        <tbody id="listaRegistros"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== FUNÇÕES PRINCIPAIS ====================
+        
+        function logoutAdmin() {
+            sessionStorage.removeItem('admin_logado');
+            window.location.href = 'login-admin.html';
+        }
+
+        function formatarCPF(input) {
+            let valor = input.value.replace(/\D/g, '');
+            if (valor.length <= 11) {
+                valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
+                valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
+                valor = valor.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                input.value = valor;
+            }
+        }
+
+        function formatarCNPJ(input) {
+            let valor = input.value.replace(/\D/g, '');
+            if (valor.length <= 14) {
+                valor = valor.replace(/^(\d{2})(\d)/, '$1.$2');
+                valor = valor.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+                valor = valor.replace(/\.(\d{3})(\d)/, '.$1/$2');
+                valor = valor.replace(/(\d{4})(\d)/, '$1-$2');
+                input.value = valor;
+            }
+        }
+
+        function mostrarInfoPasta() {
+            const pasta = document.getElementById('novaEmpresaPasta').value;
+            const infoDiv = document.getElementById('pastaInfo');
+            if (pasta) {
+                infoDiv.style.display = 'block';
+                infoDiv.innerHTML = `📁 Pasta selecionada: <strong>${pasta}</strong><br>Os dados do sistema serão salvos isoladamente nesta pasta.`;
+            } else {
+                infoDiv.style.display = 'none';
+            }
+        }
+
+        // ==================== SALVAR EMPRESA ====================
+        function salvarEmpresa() {
+            const nome = document.getElementById('novaEmpresaNome').value.trim();
+            const cnpj = document.getElementById('novaEmpresaCnpj').value.trim();
+            const cpfTitular = document.getElementById('novaEmpresaCpfTitular').value.trim();
+            const login = document.getElementById('novaEmpresaLogin').value.trim();
+            const senha = document.getElementById('novaEmpresaSenha').value;
+            const pastaSistema = document.getElementById('novaEmpresaPasta').value;
+            const cor = document.getElementById('novaEmpresaCor').value;
+            
+            if (!nome || !cnpj || !cpfTitular || !login || !senha || !pastaSistema) {
+                alert('Preencha todos os campos obrigatórios!');
+                return;
+            }
+            
+            // Valida senha forte
+            if (senha.length < 6) {
+                alert('A senha provisória deve ter pelo menos 6 caracteres!');
+                return;
+            }
+            
+            const empresas = JSON.parse(localStorage.getItem('matriz_empresas') || '[]');
+            const credenciais = JSON.parse(localStorage.getItem('matriz_empresas_credenciais') || '[]');
+            
+            if (empresas.find(e => e.cnpj === cnpj)) {
+                alert('CNPJ já cadastrado!');
+                return;
+            }
+            
+            if (credenciais.find(c => c.login === login)) {
+                alert('Login já existe!');
+                return;
+            }
+            
+            const id = 'emp_' + Date.now();
+            
+            empresas.push({
+                id: id,
+                nome: nome,
+                cnpj: cnpj,
+                cpf_titular: cpfTitular.replace(/\D/g, ''),
+                pastaSistema: pastaSistema,
+                cor: cor,
+                login_antigo: login,
+                dataCadastro: new Date().toISOString(),
+                status: 'ativo'
+            });
+            
+            credenciais.push({
+                id_empresa: id,
+                login: login,
+                senha: senha,
+                senha_provisoria: true,
+                data_criacao: new Date().toISOString(),
+                ultimo_acesso: null
+            });
+            
+            localStorage.setItem('matriz_empresas', JSON.stringify(empresas));
+            localStorage.setItem('matriz_empresas_credenciais', JSON.stringify(credenciais));
+            
+            // Salva na pasta específica
+            salvarDadosNaPasta(id, nome, login, senha, pastaSistema);
+            
+            // Salva também na lista de usuários autorizados do APP
+            salvarUsuarioAutorizado(id, nome, login, cnpj, pastaSistema);
+            
+            limparFormulario();
+            renderizarEmpresas();
+            renderizarUsuariosApp();
+            
+            registrarAcao(nome, login, 'Empresa cadastrada', '✅ Cadastrada');
+            
+            alert(`✅ Empresa cadastrada com sucesso!\n\n📁 Pasta: ${pastaSistema}\n🔑 Login: ${login}\n🔒 Senha provisória: ${senha}\n\n⚠️ A empresa deverá alterar a senha no primeiro acesso.`);
+        }
+
+        function salvarDadosNaPasta(idEmpresa, nomeEmpresa, login, senha, pasta) {
+            const key = `empresas_login_${pasta}`;
+            let empresasLogin = JSON.parse(localStorage.getItem(key) || '[]');
+            
+            const existe = empresasLogin.find(e => e.id === idEmpresa);
+            if (!existe) {
+                empresasLogin.push({
+                    id: idEmpresa,
+                    nome: nomeEmpresa,
+                    login: login,
+                    senha: senha,
+                    senha_provisoria: true,
+                    pasta: pasta,
+                    data_cadastro: new Date().toISOString()
+                });
+                localStorage.setItem(key, JSON.stringify(empresasLogin));
+                console.log(`✅ Empresa salva na pasta: ${pasta}`);
+            }
+        }
+
+        function salvarUsuarioAutorizado(id, nome, login, cnpj, pasta) {
+            let usuariosApp = JSON.parse(localStorage.getItem('matriz_usuarios_app_autorizados') || '[]');
+            
+            const existe = usuariosApp.find(u => u.id === id);
+            if (!existe) {
+                usuariosApp.push({
+                    id: id,
+                    nome: nome,
+                    login: login,
+                    cnpj: cnpj,
+                    pasta: pasta,
+                    status_acesso: 'pendente', // pendente, autorizado, bloqueado
+                    senha_provisoria: true,
+                    data_cadastro: new Date().toISOString(),
+                    ultimo_acesso: null
+                });
+                localStorage.setItem('matriz_usuarios_app_autorizados', JSON.stringify(usuariosApp));
+                console.log(`✅ Usuário adicionado à lista de autorizados: ${nome}`);
+            }
+        }
+
+        // ==================== RENDERIZAR EMPRESAS ====================
+        function renderizarEmpresas() {
+            const empresas = JSON.parse(localStorage.getItem('matriz_empresas') || '[]');
+            const credenciais = JSON.parse(localStorage.getItem('matriz_empresas_credenciais') || '[]');
+            const tbody = document.getElementById('listaEmpresas');
+            
+            let totalProvisorias = 0;
+            let totalDefinidas = 0;
+            
+            if (empresas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhuma empresa cadastrada</td></tr>';
+                document.getElementById('totalEmpresas').textContent = '0';
+                document.getElementById('totalProvisorias').textContent = '0';
+                document.getElementById('totalDefinidas').textContent = '0';
+                return;
+            }
+            
+            tbody.innerHTML = empresas.map(emp => {
+                const cred = credenciais.find(c => c.id_empresa === emp.id);
+                const statusSenha = cred ? (cred.senha_provisoria ? '⚠️ Provisória' : '✅ Definida') : '❌ Não definida';
+                const statusColor = cred ? (cred.senha_provisoria ? '#ffc107' : '#28a745') : '#dc3545';
+                
+                if (cred && cred.senha_provisoria) totalProvisorias++;
+                if (cred && !cred.senha_provisoria) totalDefinidas++;
+                
+                return `
+                    <tr>
+                        <td data-label="ID">${emp.id.substring(0, 15)}...</td>
+                        <td data-label="Nome"><span style="display: inline-block; width: 12px; height: 12px; background: ${emp.cor}; border-radius: 2px; margin-right: 8px;"></span>${emp.nome}</td>
+                        <td data-label="CNPJ">${emp.cnpj}</td>
+                        <td data-label="Pasta">📁 ${emp.pastaSistema}</td>
+                        <td data-label="Login">${cred ? cred.login : '-'}</td>
+                        <td data-label="Status Senha"><span style="color: ${statusColor}; font-weight: bold;">${statusSenha}</span></td>
+                        <td data-label="Ações">
+                            <button class="btn-icon" onclick="editarCredenciais('${emp.id}')" title="Editar">✏️</button>
+                            <button class="btn-icon btn-danger" onclick="toggleStatusEmpresa('${emp.id}')" title="Bloquear/Liberar">🔒</button>
+                            <button class="btn-icon" onclick="excluirEmpresa('${emp.id}')" title="Excluir" style="color: #dc3545;">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            document.getElementById('totalEmpresas').textContent = empresas.length;
+            document.getElementById('totalProvisorias').textContent = totalProvisorias;
+            document.getElementById('totalDefinidas').textContent = totalDefinidas;
+        }
+
+        // ==================== RENDERIZAR USUÁRIOS APP ====================
+        function renderizarUsuariosApp(filtro = '') {
+            const usuariosApp = JSON.parse(localStorage.getItem('matriz_usuarios_app_autorizados') || '[]');
+            const empresas = JSON.parse(localStorage.getItem('matriz_empresas') || '[]');
+            const credenciais = JSON.parse(localStorage.getItem('matriz_empresas_credenciais') || '[]');
+            const tbody = document.getElementById('listaUsuariosApp');
+            
+            let usuariosFiltrados = usuariosApp;
+            if (filtro) {
+                const termo = filtro.toLowerCase();
+                usuariosFiltrados = usuariosApp.filter(u => 
+                    u.nome.toLowerCase().includes(termo) || 
+                    u.login.toLowerCase().includes(termo) || 
+                    (u.cnpj && u.cnpj.includes(termo))
+                );
+            }
+            
+            let totalAutorizados = 0;
+            let totalPendentes = 0;
+            let totalBloqueados = 0;
+            
+            if (usuariosFiltrados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Nenhum usuário autorizado encontrado</td></tr>';
+                document.getElementById('totalAutorizados').textContent = '0';
+                document.getElementById('totalPendentesApp').textContent = '0';
+                document.getElementById('totalBloqueados').textContent = '0';
+                return;
+            }
+            
+            tbody.innerHTML = usuariosFiltrados.map(usuario => {
+                const cred = credenciais.find(c => c.id_empresa === usuario.id);
+                const empresa = empresas.find(e => e.id === usuario.id);
+                const senhaProvisoria = cred ? cred.senha_provisoria : true;
+                
+                // Determina status de acesso
+                let statusAcesso = '';
+                let statusText = '';
+                let statusClass = '';
+                
+                if (usuario.status_acesso === 'bloqueado') {
+                    statusAcesso = 'bloqueado';
+                    statusText = '🔒 Bloqueado';
+                    statusClass = 'status-bloqueado';
+                    totalBloqueados++;
+                } else if (senhaProvisoria) {
+                    statusAcesso = 'pendente';
+                    statusText = '⚠️ Pendente (1º Acesso)';
+                    statusClass = 'status-pendente';
+                    totalPendentes++;
+                } else {
+                    statusAcesso = 'autorizado';
+                    statusText = '✅ Autorizado';
+                    statusClass = 'status-autorizado';
+                    totalAutorizados++;
+                }
+                
+                const ultimoAcesso = usuario.ultimo_acesso ? new Date(usuario.ultimo_acesso).toLocaleString() : 'Nunca';
+                
+                return `
+                    <tr>
+                        <td data-label="Empresa"><strong>${usuario.nome}</strong></td>
+                        <td data-label="CNPJ">${usuario.cnpj || '-'}</td>
+                        <td data-label="Login">${usuario.login}</td>
+                        <td data-label="Pasta">📁 ${usuario.pasta}</td>
+                        <td data-label="Status Senha">${senhaProvisoria ? '⚠️ Provisória' : '✅ Definida'}</td>
+                        <td data-label="Status Acesso"><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td data-label="Último Acesso">${ultimoAcesso}</td>
+                        <td data-label="Ações">
+                            <button class="btn-icon" onclick="toggleAcessoUsuario('${usuario.id}')" title="Bloquear/Liberar Acesso">🔒</button>
+                            <button class="btn-icon" onclick="reenviarCredenciais('${usuario.id}')" title="Reenviar Credenciais">📧</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            document.getElementById('totalAutorizados').textContent = totalAutorizados;
+            document.getElementById('totalPendentesApp').textContent = totalPendentes;
+            document.getElementById('totalBloqueados').textContent = totalBloqueados;
+        }
+
+        function sincronizarUsuariosComEmpresas() {
+            const empresas = JSON.parse(localStorage.getItem('matriz_empresas') || '[]');
+            const credenciais = JSON.parse(localStorage.getItem('matriz_empresas_credenciais') || '[]');
+            let usuariosApp = JSON.parse(localStorage.getItem('matriz_usuarios_app_autorizados') || '[]');
+            
+            empresas.forEach(emp => {
+                const cred = credenciais.find(c => c.id_empresa === emp.id);
+                const existe = usuariosApp.find(u => u.id === emp.id);
+                
+                if (!existe && cred) {
+                    usuariosApp.push({
+                        id: emp.id,
+                        nome: emp.nome,
+                        login: cred.login,
+                        cnpj: emp.cnpj,
+                        pasta: emp.pastaSistema,
+                        status_acesso: 'pendente',
+                        senha_provisoria: cred.senha_provisoria,
+                        data_cadastro: new Date().toISOString(),
+                        ultimo_acesso: null
+                    });
+                } else if (existe && cred) {
+                    // Atualiza dados
+                    existe.login = cred.login;
+                    existe.senha_provisoria = cred.senha_provisoria;
+                    existe.nome = emp.nome;
+                }
+            });
+            
+            localStorage.setItem('matriz_usuarios_app_autorizados', JSON.stringify(usuariosApp));
+            renderizarUsuariosApp();
+            alert('✅ Sincronização concluída!');
+        }
+
+        function toggleAcessoUsuario(id) {
+            const usuariosApp = JSON.parse(localStorage.getItem('matriz_usuarios_app_autorizados') || '[]');
+            const usuario = usuariosApp.find(u => u.id === id);
+            
+            if (usuario) {
+                if (usuario.status_acesso === 'bloqueado') {
+                    usuario.status_acesso = 'pendente';
+                    alert(`✅ Acesso liberado para ${usuario.nome}!`);
+                } else {
+                    usuario.status_acesso = 'bloqueado';
+                    alert(`🔒 Acesso bloqueado para ${usuario.nome}!`);
+                }
+                localStorage.setItem('matriz_usuarios_app_autorizados', JSON.stringify(usuariosApp));
+                renderizarUsuariosApp();
+            }
+        }
+
+        function reenviarCredenciais(id) {
+            const empresas = JSON.parse(localStorage.getItem('matriz_empresas') || '[]');
+            const credenciais = JSON.parse(localStorage.getItem('matriz_empresas_credenciais') || '[]');
+            const empresa = empresas.find(e => e.id === id);
+            const cred = credenciais.find(c => c.id_empresa === id);
+            
+            if (empresa && cred) {
+                alert(`📧 Credenciais da empresa ${empresa.nome}:\n\n🔑 Login: ${cred.login}\n🔒 Senha: ${cred.senha}\n📁 Pasta: ${empresa.pastaSistema}\n\n⚠️ A senha é ${cred.senha_provisoria ? 'provisória' : 'definida'}!`);
+            }
+        }
+
+        // ==================== EDITAR CREDENCIAIS ====================
+        function editarCredenciais(idEmpresa) {
+            const empresas = JSON.parse(localStorage.getItem('matriz_empresas') || '[]');
+            const credenciais = JSON.parse(localStorage.getItem('matriz_empresas_credenciais') || '[]');
+            const empresa = empresas.find(e => e.id === idEmpresa);
+            const cred = credenciais.find(c => c.id_empresa === idEmpresa);
+            
+            if (!empresa || !cred) {
+                alert('Empresa não encontrada!');
+                return;
+            }
+            
+            const novoLogin = prompt('Digite o novo login da empresa:', cred.login);
+            const novaSenha = prompt('Digite a nova senha da empresa:');
+            
+            if (novoLogin && novaSenha) {
+                const index = credenciais.findIndex(c => c.id_empresa === idEmpresa);
+                
+                if (index !== -1) {
+                    const credencialAntiga = {...credenciais[index]};
+                    credenciais[index].login = novoLogin;
+                    credenciais[index].senha = novaSenha;
+                    credenciais[index].senha_provisoria = false;
+                    credenciais[index].data_atualizacao = new Date().toISOString();
+                    
+                    localStorage.setItem('matriz_empresas_credenciais', JSON.stringify(credenciais));
+                    
+                    registrarAcao(empresa.nome, novoLogin, 'Credenciais alteradas', '✏️ Editado');
+                    
+                    atualizarLoginNaPasta(empresa.pastaSistema, idEmpresa, novoLogin, novaSenha);
+                    
+                    // Atualiza na lista de usuários autorizados
+                    const usuariosApp = JSON.parse(localStorage.getItem('matriz_usuarios_app_autorizados') || '[]');
+                    const userApp = usuariosApp.find(u => u.id === idEmpresa);
+                    if (userApp) {
+                        userApp.login = novoLogin;
+                        userApp.senha_provisoria = false;
+                        localStorage.setItem('matriz_usuarios_app_autorizados', JSON.stringify(usuariosApp));
+                    }
+                    
+                    renderizarEmpresas();
+                    renderizarUsuariosApp();
+                    alert('✅ Credenciais atualizadas com sucesso!');
+                }
+            }
+        }
+
+        function atualizarLoginNaPasta(pasta, idEmpresa, novoLogin, novaSenha) {
+            const key = `empresas_login_${pasta}`;
+            const empresasLogin = JSON.parse(localStorage.getItem(key) || '[]');
+            const index = empresasLogin.findIndex(e => e.id === idEmpresa);
+            
+            if (index !== -1) {
+                empresasLogin[index].login = novoLogin;
+                empresasLogin[index].senha = novaSenha;
+                empresasLogin[index].senha_provisoria = false;
+                localStorage.setItem(key, JSON.stringify(empresasLogin));
+                console.log(`✅ Credenciais atualizadas na pasta: ${pasta}`);
+            }
+        }
+
+        function toggleStatusEmpresa(id) {
+            const empresas = JSON.parse(localStorage.getItem('matriz_empresas') || '[]');
+            const empresa = empresas.find(e => e.id === id);
+            
+            if (empresa) {
+                if (empresa.status === 'bloqueado') {
+                    empresa.status = 'ativo';
+                    alert(`✅ Empresa ${empresa.nome} foi LIBERADA!`);
+                } else {
+                    empresa.status = 'bloqueado';
+                    alert(`🔒 Empresa ${empresa.nome} foi BLOQUEADA!`);
+                }
+                localStorage.setItem('matriz_empresas', JSON.stringify(empresas));
+                renderizarEmpresas();
+                renderizarUsuariosApp();
+            }
+        }
+
+        function excluirEmpresa(id) {
+            if (!confirm('Tem certeza que deseja excluir esta empresa? Esta ação é irreversível!')) return;
+            
+            let empresas = JSON.parse(localStorage.getItem('matriz_empresas') || '[]');
+            const empresa = empresas.find(e => e.id === id);
+            
+            if (empresa) {
+                empresas = empresas.filter(e => e.id !== id);
+                localStorage.setItem('matriz_empresas', JSON.stringify(empresas));
+                
+                const credenciais = JSON.parse(localStorage.getItem('matriz_empresas_credenciais') || '[]');
+                const novasCredenciais = credenciais.filter(c => c.id_empresa !== id);
+                localStorage.setItem('matriz_empresas_credenciais', JSON.stringify(novasCredenciais));
+                
+                // Remove da pasta
+                const key = `empresas_login_${empresa.pastaSistema}`;
+                const empresasPasta = JSON.parse(localStorage.getItem(key) || '[]');
+                const novasEmpresasPasta = empresasPasta.filter(e => e.id !== id);
+                localStorage.setItem(key, JSON.stringify(novasEmpresasPasta));
+                
+                // Remove dos usuários autorizados
+                const usuariosApp = JSON.parse(localStorage.getItem('matriz_usuarios_app_autorizados') || '[]');
+                const novosUsuariosApp = usuariosApp.filter(u => u.id !== id);
+                localStorage.setItem('matriz_usuarios_app_autorizados', JSON.stringify(novosUsuariosApp));
+                
+                registrarAcao(empresa.nome, '-', 'Empresa excluída', '🗑️ Excluída');
+                
+                renderizarEmpresas();
+                renderizarUsuariosApp();
+                alert('✅ Empresa excluída com sucesso!');
+            }
+        }
+
+        // ==================== REGISTROS ====================
+        function registrarAcao(empresaNome, login, acao, status) {
+            const registros = JSON.parse(localStorage.getItem('matriz_registros_alteracoes') || '[]');
+            registros.unshift({
+                id: Date.now(),
+                empresa: empresaNome,
+                login: login,
+                acao: acao,
+                data: new Date().toLocaleString(),
+                status: status
+            });
+            // Mantém apenas os últimos 100 registros
+            if (registros.length > 100) registros.pop();
+            localStorage.setItem('matriz_registros_alteracoes', JSON.stringify(registros));
+            renderizarRegistros();
+        }
+
+        function renderizarRegistros(filtro = '') {
+            const registros = JSON.parse(localStorage.getItem('matriz_registros_alteracoes') || '[]');
+            const tbody = document.getElementById('listaRegistros');
+            
+            let registrosFiltrados = registros;
+            if (filtro) {
+                const termo = filtro.toLowerCase();
+                registrosFiltrados = registros.filter(r => r.empresa.toLowerCase().includes(termo));
+            }
+            
+            if (registrosFiltrados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhum registro encontrado</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = registrosFiltrados.map(reg => `
+                <tr>
+                    <td data-label="Data">${reg.data}</td>
+                    <td data-label="Empresa">${reg.empresa}</td>
+                    <td data-label="Login">${reg.login || '-'}</td>
+                    <td data-label="Ação">${reg.acao}</td>
+                    <td data-label="Status"><span class="status-badge status-autorizado">${reg.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function limparRegistros() {
+            if (confirm('Tem certeza que deseja limpar todos os registros?')) {
+                localStorage.setItem('matriz_registros_alteracoes', '[]');
+                renderizarRegistros();
+                alert('✅ Registros limpos!');
+            }
+        }
+
+        function filtrarRegistros() {
+            const search = document.getElementById('searchRegistro').value;
+            renderizarRegistros(search);
+        }
+
+        function filtrarUsuariosApp() {
+            const search = document.getElementById('searchUsuarioApp').value;
+            renderizarUsuariosApp(search);
+        }
+
+        function limparFormulario() {
+            document.getElementById('novaEmpresaNome').value = '';
+            document.getElementById('novaEmpresaCnpj').value = '';
+            document.getElementById('novaEmpresaCpfTitular').value = '';
+            document.getElementById('novaEmpresaLogin').value = '';
+            document.getElementById('novaEmpresaSenha').value = '';
+            document.getElementById('novaEmpresaPasta').value = '';
+            document.getElementById('novaEmpresaCor').value = '#667eea';
+            document.getElementById('pastaInfo').style.display = 'none';
+        }
+
+        function inicializarAbas() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.dataset.tab;
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.getElementById(`tab-${tabId}`).classList.add('active');
+                    
+                    if (tabId === 'usuarios') renderizarUsuariosApp();
+                    if (tabId === 'registros') renderizarRegistros();
+                });
+            });
+        }
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            inicializarAbas();
+            renderizarEmpresas();
+            renderizarUsuariosApp();
+            renderizarRegistros();
+        });
+    </script>
+</body>
+</html>
